@@ -1,55 +1,68 @@
 package com.example.educanetapp.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educanetapp.model.Grade
+import com.example.educanetapp.model.ProfileUiState
 import com.example.educanetapp.model.Student
-import kotlinx.coroutines.delay
+import com.example.educanetapp.utils.DataStoreManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-data class ProfileUiState(
-    val student: Student? = null,
-    val grades: List<Grade> = emptyList(),
-    val isLoading: Boolean = true
-)
-
-class ProfileViewModel : ViewModel() {
+class ProfileViewModel(
+    private val context: Context,
+    private val userEmail: String
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState
 
     init {
-        loadProfileData()
+        loadProfile()
     }
 
-    private fun loadProfileData() {
+    private fun loadProfile() {
         viewModelScope.launch {
-            // Simulamos una carga de datos (por ejemplo, desde Supabase o Room)
-            delay(1200)
+            _uiState.value = _uiState.value.copy(isLoading = true)
 
-            val student = Student(
-                name = "Gonzalo Sebastián",
-                email = "estudiante@educanet.cl",
-                password = "",
-                rut = "20.456.789-0",
-                phone = "+56 9 1234 5678",
-                photoUrl = null // podrías agregar una URL real más adelante
-            )
+            val users = DataStoreManager.loadUsers(context)
+            val studentData = users.find { it["email"] == userEmail }
 
-            val grades = listOf(
-                Grade("Matemáticas", 5.8),
-                Grade("Lenguaje", 6.3),
-                Grade("Historia", 5.5),
-                Grade("Ciencias", 6.0)
-            )
+            if (studentData != null) {
+                val student = Student(
+                    name = studentData["name"] ?: "",
+                    email = studentData["email"] ?: "",
+                    password = studentData["password"] ?: "",
+                    rut = studentData["rut"] ?: "",
+                    phone = studentData["phone"] ?: "",
+                    photoUrl = null
+                )
 
-            _uiState.value = ProfileUiState(
-                student = student,
-                grades = grades,
-                isLoading = false
-            )
+                val grades = listOf(
+                    Grade("Matemáticas", 5.8),
+                    Grade("Lenguaje", 6.3),
+                    Grade("Historia", 5.5),
+                    Grade("Ciencias", 6.0)
+                )
+
+                _uiState.value = ProfileUiState(
+                    student = student,
+                    grades = grades,
+                    isLoading = false
+                )
+            } else {
+                _uiState.value = ProfileUiState(isLoading = false)
+            }
         }
     }
+
+    fun logout() {
+        viewModelScope.launch {
+            DataStoreManager.clearUsers(context) // Limpiar datos de usuario
+        }
+    }
+
+    private fun DataStoreManager.clearUsers(context: Context) {}
 }

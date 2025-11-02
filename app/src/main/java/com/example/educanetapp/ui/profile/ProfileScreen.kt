@@ -2,8 +2,8 @@ package com.example.educanetapp.ui.profile
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -11,17 +11,29 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.educanetapp.R
+import com.example.educanetapp.model.Student
+import com.example.educanetapp.model.Grade
 import com.example.educanetapp.viewmodel.ProfileViewModel
+import com.example.educanetapp.viewmodel.ProfileViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = viewModel()) {
+fun ProfileScreen(
+    navController: NavController,
+    userEmail: String
+) {
+    val context = LocalContext.current
+    val viewModel: ProfileViewModel = viewModel(
+        factory = ProfileViewModelFactory(context, userEmail)
+    )
+
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
@@ -30,10 +42,7 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = vi
                 title = { Text("Perfil del Estudiante") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Volver atrás"
-                        )
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver atrás")
                     }
                 }
             )
@@ -47,92 +56,105 @@ fun ProfileScreen(navController: NavController, viewModel: ProfileViewModel = vi
             if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
-                uiState.student?.let { student ->
-                    LazyColumn(
+                val student: Student? = uiState.student
+                val grades: List<Grade> = uiState.grades ?: emptyList()
+
+                if (student != null) {
+                    Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(16.dp),
+                            .padding(16.dp)
+                            .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        item {
-                            // Foto del estudiante (opcional)
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (student.photoUrl == null) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                                        contentDescription = "Foto de perfil",
-                                        modifier = Modifier.size(120.dp),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else {
-                                    // En un futuro podrías cargar desde URL con Coil
-                                }
-                            }
+                        // Foto de perfil
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                                contentDescription = "Foto de perfil",
+                                modifier = Modifier.size(120.dp),
+                                contentScale = ContentScale.Crop
+                            )
                         }
 
-                        item {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text("Nombre: ${student.name}", style = MaterialTheme.typography.bodyLarge)
-                                Text("RUT: ${student.rut}", style = MaterialTheme.typography.bodyLarge)
-                                Text("Teléfono: ${student.phone}", style = MaterialTheme.typography.bodyLarge)
-                                Text("Correo: ${student.email}", style = MaterialTheme.typography.bodyLarge)
-                            }
+                        // Datos del estudiante
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text("Nombre: ${student.name}", style = MaterialTheme.typography.bodyLarge)
+                            Text("RUT: ${student.rut}", style = MaterialTheme.typography.bodyLarge)
+                            Text("Teléfono: ${student.phone}", style = MaterialTheme.typography.bodyLarge)
+                            Text("Correo: ${student.email}", style = MaterialTheme.typography.bodyLarge)
                         }
 
-                        item {
+                        // Notas
+                        if (grades.isNotEmpty()) {
                             Text(
                                 text = "Notas",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                             )
-                        }
-
-                        items(uiState.grades) { grade ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                elevation = CardDefaults.cardElevation(4.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .padding(16.dp)
-                                        .fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                            grades.forEach { grade ->
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    elevation = CardDefaults.cardElevation(4.dp)
                                 ) {
-                                    Text(grade.subject)
-                                    Text(
-                                        text = grade.score.toString(),
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .padding(16.dp)
+                                            .fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(grade.subject)
+                                        Text(
+                                            text = grade.score.toString(),
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
                             }
                         }
 
-                        // --- Botón para acceder a la pantalla de recursos ---
-                        item {
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Button(
-                                onClick = { navController.navigate("resources") },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text("Ver recursos educativos")
-                            }
+                        // Botones de navegación
+                        Button(
+                            onClick = { navController.navigate("resources") },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Ver recursos educativos")
                         }
 
-                        // --- Botón para acceder a la pantalla de agenda ---
-                        item {
-                            Button(
-                                onClick = { navController.navigate("agenda") },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text("Abrir agenda")
-                            }
+                        Button(
+                            onClick = { navController.navigate("agenda") },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Abrir agenda")
                         }
+
+                        Button(
+                            onClick = {
+                                viewModel.logout()
+                                navController.navigate("login") {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Cerrar sesión", color = MaterialTheme.colorScheme.onError)
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
+                } else {
+                    Text(
+                        "No se encontró el perfil del estudiante.",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
                 }
             }
         }

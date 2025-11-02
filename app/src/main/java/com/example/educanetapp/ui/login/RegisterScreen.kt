@@ -27,9 +27,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(title = { Text("Registro de Estudiante") })
-        }
+        topBar = { CenterAlignedTopAppBar(title = { Text("Registro de Estudiante") }) }
     ) { padding ->
         Box(
             modifier = Modifier
@@ -52,7 +50,6 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-
                 OutlinedTextField(
                     value = rut,
                     onValueChange = { rut = it },
@@ -60,7 +57,6 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-
                 OutlinedTextField(
                     value = phone,
                     onValueChange = { phone = it },
@@ -68,7 +64,6 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -76,7 +71,6 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -94,18 +88,22 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                     onClick = {
                         viewModel.register(
                             context,
-                            Student(
-                                name = name,
-                                email = email,
-                                password = password,
-                                rut = rut,
-                                phone = phone
-                            )
+                            Student(name, email, password, rut, phone)
                         )
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Registrar")
+                }
+
+                // Enviar al login si registro fue exitoso
+                if (uiState.success) {
+                    LaunchedEffect(uiState.success) {
+                        navController.navigate("login") {
+                            popUpTo("register") { inclusive = true }
+                        }
+                        viewModel.clearError()
+                    }
                 }
 
                 TextButton(onClick = {
@@ -114,14 +112,6 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                     }
                 }) {
                     Text("¿Ya tienes cuenta? Inicia sesión")
-                }
-
-                if (uiState.success) {
-                    LaunchedEffect(Unit) {
-                        navController.navigate("login") {
-                            popUpTo("register") { inclusive = true }
-                        }
-                    }
                 }
             }
         }

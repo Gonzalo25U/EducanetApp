@@ -3,10 +3,9 @@ package com.example.educanetapp.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.educanetapp.model.AuthUiState
 import com.example.educanetapp.model.Student
+import com.example.educanetapp.model.AuthUiState
 import com.example.educanetapp.utils.DataStoreManager
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -16,91 +15,59 @@ class AuthViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState
 
-    private var registeredStudents = mutableListOf<Student>()
-
-    fun onEmailChange(newEmail: String) {
-        _uiState.value = _uiState.value.copy(email = newEmail)
+    init {
+        // Cargar usuarios registrados al inicio
+        // Nota: si quieres puedes llamar a loadUsers(context) desde la pantalla con el contexto
     }
 
-    fun onPasswordChange(newPassword: String) {
-        _uiState.value = _uiState.value.copy(password = newPassword)
+    fun loadUsers(context: Context) {
+        viewModelScope.launch {
+            val users = DataStoreManager.loadUsers(context)
+            _uiState.value = _uiState.value.copy(students = users)
+        }
     }
 
     fun register(context: Context, student: Student) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            delay(500)
+            // Convertimos Student a Map<String, String>
+            val studentMap = mapOf(
+                "name" to student.name,
+                "email" to student.email,
+                "password" to student.password,
+                "rut" to student.rut,
+                "phone" to student.phone
+            )
 
-            val stored = DataStoreManager.loadUsers(context)
-            registeredStudents = stored.map {
-                Student(
-                    name = it["name"] ?: "",
-                    email = it["email"] ?: "",
-                    password = it["password"] ?: "",
-                    rut = it["rut"] ?: "",
-                    phone = it["phone"] ?: "",
-                    photoUrl = null
-                )
-            }.toMutableList()
+            val updated = _uiState.value.students + studentMap
+            DataStoreManager.saveUsers(context, updated)
 
-            if (registeredStudents.any { it.email == student.email }) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = "Ya existe un usuario con este correo"
-                )
-            } else {
-                registeredStudents.add(student)
-                saveUsers(context)
-                _uiState.value = _uiState.value.copy(isLoading = false, success = true)
-            }
+            _uiState.value = _uiState.value.copy(
+                students = updated,
+                success = true,
+                error = null
+            )
         }
     }
 
-    fun login(context: Context) {
+    fun login(context: Context, email: String, password: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            delay(500)
+            val users = DataStoreManager.loadUsers(context)
+            val user = users.find { it["email"] == email && it["password"] == password }
 
-            val stored = DataStoreManager.loadUsers(context)
-            registeredStudents = stored.map {
-                Student(
-                    name = it["name"] ?: "",
-                    email = it["email"] ?: "",
-                    password = it["password"] ?: "",
-                    rut = it["rut"] ?: "",
-                    phone = it["phone"] ?: "",
-                    photoUrl = null
+            if (user != null) {
+                _uiState.value = _uiState.value.copy(
+                    loggedInUser = user,
+                    error = null
                 )
-            }.toMutableList()
-
-            val email = _uiState.value.email
-            val password = _uiState.value.password
-
-            val found = registeredStudents.any { it.email == email && it.password == password }
-
-            if (found) {
-                _uiState.value = _uiState.value.copy(isLoading = false, success = true)
             } else {
                 _uiState.value = _uiState.value.copy(
-                    isLoading = false,
                     error = "Correo o contraseña incorrectos"
                 )
             }
         }
     }
 
-    private fun saveUsers(context: Context) {
-        viewModelScope.launch {
-            val userMaps = registeredStudents.map {
-                mapOf(
-                    "name" to it.name,
-                    "email" to it.email,
-                    "password" to it.password,
-                    "rut" to it.rut,
-                    "phone" to it.phone
-                )
-            }
-            DataStoreManager.saveUsers(context, userMaps)
-        }
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
     }
 }
