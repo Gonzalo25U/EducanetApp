@@ -12,26 +12,29 @@ import com.example.educanetapp.ui.login.RegisterScreen
 import com.example.educanetapp.ui.profile.ProfileScreen
 import com.example.educanetapp.ui.resources.ResourcesScreen
 import com.example.educanetapp.ui.classes.ClassesScreen
+import com.example.educanetapp.ui.classes.ClasesVirtualesScreen
 import com.example.educanetapp.ui.agenda.AgendaScreen
 import com.example.educanetapp.viewmodel.AuthViewModel
+import com.example.educanetapp.viewmodel.ClassesViewModel
+import com.example.educanetapp.viewmodel.AgendaViewModel
 
 @Composable
 fun NavGraph(navController: NavHostController) {
     NavHost(navController = navController, startDestination = "login") {
 
-        // Login
+        // 🔹 Login
         composable("login") {
             val authViewModel: AuthViewModel = viewModel()
             LoginScreen(navController = navController, viewModel = authViewModel)
         }
 
-        // Register
+        // 🔹 Registro
         composable("register") {
             val authViewModel: AuthViewModel = viewModel()
             RegisterScreen(navController = navController, viewModel = authViewModel)
         }
 
-        // Profile con argumento userEmail
+        // 🔹 Perfil (con argumento userEmail)
         composable(
             route = "profile/{userEmail}",
             arguments = listOf(navArgument("userEmail") { type = NavType.StringType })
@@ -40,19 +43,26 @@ fun NavGraph(navController: NavHostController) {
             ProfileScreen(navController = navController, userEmail = userEmail)
         }
 
-        // Recursos educativos
+        // 🔹 Recursos educativos
         composable("resources") {
             ResourcesScreen(navController)
         }
 
-        // Clases
+        // 🔹 Clases (pantalla de permisos)
         composable("classes") {
-            ClassesScreen(navController)
+            val classesViewModel: ClassesViewModel = viewModel()
+            ClassesScreen(navController = navController, viewModel = classesViewModel)
         }
 
-        // Agenda
+        // 🔹 Clases en curso / Virtuales
+        composable("clasesVirtuales") {
+            ClasesVirtualesScreen(navController)
+        }
+
+        // 🔹 Agenda
         composable("agenda") {
-            AgendaScreen(navController)
+            val agendaViewModel: AgendaViewModel = viewModel()
+            AgendaScreen(navController = navController, viewModel = agendaViewModel)
         }
     }
 }

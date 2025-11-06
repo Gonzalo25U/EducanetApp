@@ -15,10 +15,7 @@ class AuthViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState
 
-    init {
-        // Cargar usuarios registrados al inicio
-        // Nota: si quieres puedes llamar a loadUsers(context) desde la pantalla con el contexto
-    }
+
 
     fun loadUsers(context: Context) {
         viewModelScope.launch {

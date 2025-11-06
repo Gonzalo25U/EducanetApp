@@ -19,30 +19,38 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgendaScreen(navController: NavController, viewModel: AgendaViewModel = viewModel()) {
-
+    //fecha actual seleccionada
     val selectedDateStr by viewModel.selectedDate.collectAsState()
+    //fechas y las notas existentes
     val remindersMap by viewModel.reminders.collectAsState()
 
+    //guarda la nota en una nueva variable local
     var newNote by remember { mutableStateOf("") }
 
+    //guarda los datos para que la pantalla no se recomponga (remember) y recalcula el resultado
+    //para obtener una lista actualizada
     val notesForDate by remember(selectedDateStr, remindersMap) {
         derivedStateOf { viewModel.getRemindersForDate(selectedDateStr) }
     }
 
+    //formatea las fechas para que la interna de el usuario coincida con el de base
     val displayFormatter = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
     val backendFormatter = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
 
     Scaffold(
+        //barra superior con título y botón para volver atrás.
         topBar = {
             TopAppBar(
                 title = { Text("Agenda del Estudiante") },
                 navigationIcon = {
+                    //retrocede a la pantalla anterior
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver atrás")
                     }
                 }
             )
         },
+        //botón flotante para agregar un nuevo recordatorio.
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -61,6 +69,8 @@ fun AgendaScreen(navController: NavController, viewModel: AgendaViewModel = view
             }
         }
     ) { padding ->
+
+        //Es el contenido principal en este caso lista las fechas y recordatorios.
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -113,6 +123,7 @@ fun AgendaScreen(navController: NavController, viewModel: AgendaViewModel = view
                         elevation = CardDefaults.cardElevation(3.dp)
                     ) {
                         if (isEditing) {
+                            //modo edicion
                             Row(
                                 modifier = Modifier
                                     .padding(8.dp)
@@ -129,8 +140,10 @@ fun AgendaScreen(navController: NavController, viewModel: AgendaViewModel = view
                                     viewModel.updateReminder(note, editedText)
                                     isEditing = false
                                 }) {
+                                    //guarda lo editado
                                     Icon(Icons.Default.Check, contentDescription = "Guardar")
                                 }
+                                    //cancela la edicion
                                 IconButton(onClick = { isEditing = false }) {
                                     Icon(Icons.Default.Close, contentDescription = "Cancelar")
                                 }
@@ -145,9 +158,11 @@ fun AgendaScreen(navController: NavController, viewModel: AgendaViewModel = view
                             ) {
                                 Text(note, style = MaterialTheme.typography.bodyLarge)
                                 Row {
+                                    //Activa el modo edicion
                                     IconButton(onClick = { isEditing = true }) {
                                         Icon(Icons.Default.Edit, contentDescription = "Editar")
                                     }
+                                    //Activa el modo eliminar
                                     IconButton(onClick = { viewModel.deleteReminder(note) }) {
                                         Icon(Icons.Default.Delete, contentDescription = "Eliminar")
                                     }
@@ -161,6 +176,7 @@ fun AgendaScreen(navController: NavController, viewModel: AgendaViewModel = view
     }
 }
 
+//componente que muestra un boton con el dia actual, 3 dias antes y 3 dias despues(una semana)
 @Composable
 private fun CalendarRow(
     selectedDateStr: String,
@@ -168,9 +184,11 @@ private fun CalendarRow(
     backendFormatter: SimpleDateFormat,
     displayFormatter: SimpleDateFormat
 ) {
+    //trata de convertir el texto de la fecha actual en un objeto(Date) y si falla usa la fecha actual
     val cal = Calendar.getInstance()
     try { cal.time = backendFormatter.parse(selectedDateStr) ?: Date() } catch (_: Exception) { cal.time = Date() }
 
+    //lista de los 7 dias
     val days = remember(selectedDateStr) {
         val list = mutableListOf<Date>()
         for (i in -3..3) {
@@ -181,7 +199,7 @@ private fun CalendarRow(
         }
         list
     }
-
+    //muestra la fecha formateada
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -189,9 +207,12 @@ private fun CalendarRow(
         days.forEach { date ->
             val dateStr = backendFormatter.format(date)
             val isSelected = dateStr == selectedDateStr
+            //propiedades de el boton
             Button(
+                //desde aqui se actualiza el view model
                 onClick = { onDateSelected(dateStr) },
                 colors = ButtonDefaults.buttonColors(
+                    //para cambiar el color de el boton al seleccionar
                     containerColor = if (isSelected) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.secondaryContainer
                 ),
