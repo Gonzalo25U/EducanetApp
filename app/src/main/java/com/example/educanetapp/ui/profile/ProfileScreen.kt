@@ -1,15 +1,22 @@
 package com.example.educanetapp.ui.profile
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -39,12 +46,23 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Perfil del Estudiante") },
+                title = {
+                    Text(
+                        "Perfil del Estudiante",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver atrás")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
         }
     ) { padding ->
@@ -52,9 +70,13 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             if (uiState.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.primary
+                )
             } else {
                 val student: Student? = uiState.student
                 val grades: List<Grade> = uiState.grades ?: emptyList()
@@ -63,100 +85,272 @@ fun ProfileScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(16.dp)
-                            .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                            .verticalScroll(rememberScrollState())
                     ) {
-                        // Foto de perfil
+                        // Header con gradiente y foto de perfil
                         Box(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.primary,
+                                            MaterialTheme.colorScheme.primaryContainer
+                                        )
+                                    )
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                                contentDescription = "Foto de perfil",
-                                modifier = Modifier.size(120.dp),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        // Datos del estudiante
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text("Nombre: ${student.name}", style = MaterialTheme.typography.bodyLarge)
-                            Text("RUT: ${student.rut}", style = MaterialTheme.typography.bodyLarge)
-                            Text("Teléfono: ${student.phone}", style = MaterialTheme.typography.bodyLarge)
-                            Text("Correo: ${student.email}", style = MaterialTheme.typography.bodyLarge)
-                        }
-
-                        // Notas
-                        if (grades.isNotEmpty()) {
-                            Text(
-                                text = "Notas",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                            )
-                            grades.forEach { grade ->
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    elevation = CardDefaults.cardElevation(4.dp)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                // Foto de perfil con borde
+                                Box(
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.surface)
+                                        .padding(4.dp)
                                 ) {
-                                    Row(
+                                    Image(
+                                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                                        contentDescription = "Foto de perfil",
                                         modifier = Modifier
-                                            .padding(16.dp)
-                                            .fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(grade.subject)
-                                        Text(
-                                            text = grade.score.toString(),
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
+                                            .fillMaxSize()
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
                                 }
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                // Nombre del estudiante
+                                Text(
+                                    text = student.name,
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
                             }
                         }
 
-                        // Botones de navegación
-                        Button(
-                            onClick = { navController.navigate("resources") },
-                            modifier = Modifier.fillMaxWidth()
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Text("Ver recursos educativos")
-                        }
+                            // Tarjeta de información personal
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface
+                                ),
+                                elevation = CardDefaults.cardElevation(2.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(20.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Text(
+                                        text = "Información Personal",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
 
-                        Button(
-                            onClick = { navController.navigate("agenda") },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Abrir agenda")
-                        }
-
-                        Button(
-                            onClick = {
-                                viewModel.logout()
-                                navController.navigate("login") {
-                                    popUpTo(0) { inclusive = true }
+                                    InfoRow(Icons.Default.AccountCircle, "RUT", student.rut)
+                                    InfoRow(Icons.Default.Phone, "Teléfono", student.phone)
+                                    InfoRow(Icons.Default.Email, "Correo", student.email)
                                 }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Cerrar sesión", color = MaterialTheme.colorScheme.onError)
-                        }
+                            }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                            // Sección de notas
+                            if (grades.isNotEmpty()) {
+                                Text(
+                                    text = "Mis Calificaciones",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+
+                                grades.forEach { grade ->
+                                    GradeCard(grade)
+                                }
+                            }
+
+                            // Botones de acción con iconos
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            ActionButton(
+                                text = "Ver recursos educativos",
+                                icon = Icons.Default.List,
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                onClick = { navController.navigate("resources") }
+                            )
+
+                            ActionButton(
+                                text = "Abrir agenda",
+                                icon = Icons.Default.DateRange,
+                                containerColor = MaterialTheme.colorScheme.secondary,
+                                onClick = { navController.navigate("agenda") }
+                            )
+
+                            ActionButton(
+                                text = "Cerrar sesión",
+                                icon = Icons.Default.ExitToApp,
+                                containerColor = MaterialTheme.colorScheme.error,
+                                onClick = {
+                                    viewModel.logout()
+                                    navController.navigate("login") {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
                     }
                 } else {
-                    Text(
-                        "No se encontró el perfil del estudiante.",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "No se encontró el perfil del estudiante",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                        )
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun InfoRow(
+    icon: ImageVector,
+    label: String,
+    value: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
+        )
+        Column {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun GradeCard(grade: Grade) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = grade.subject,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            // Nota con color según el valor
+            val gradeColor = when {
+                grade.score >= 6.0 -> Color(0xFF4CAF50) // Verde
+                grade.score >= 5.0 -> Color(0xFFFFA726) // Naranja
+                else -> Color(0xFFE53935) // Rojo
+            }
+
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = gradeColor.copy(alpha = 0.15f)
+            ) {
+                Text(
+                    text = grade.score.toString(),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = gradeColor,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActionButton(
+    text: String,
+    icon: ImageVector,
+    containerColor: Color,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor
+        ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 4.dp
+        )
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
