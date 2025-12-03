@@ -3,10 +3,10 @@ package com.example.educanetapp.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.educanetapp.model.Grade
+import com.example.educanetapp.dto.UserProfileDTO
 import com.example.educanetapp.model.ProfileUiState
 import com.example.educanetapp.model.Student
-import com.example.educanetapp.utils.DataStoreManager
+import com.example.educanetapp.network.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -26,43 +26,39 @@ class ProfileViewModel(
     private fun loadProfile() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                // Usar el Context para obtener la instancia correcta de Retrofit
+                val dto: UserProfileDTO = RetrofitInstance.getProfileApi(context).getProfile(userEmail)
 
-            val users = DataStoreManager.loadUsers(context)
-            val studentData = users.find { it["email"] == userEmail }
-
-            if (studentData != null) {
                 val student = Student(
-                    name = studentData["name"] ?: "",
-                    email = studentData["email"] ?: "",
-                    password = studentData["password"] ?: "",
-                    rut = studentData["rut"] ?: "",
-                    phone = studentData["phone"] ?: "",
-                    photoUrl = null
-                )
-
-                val grades = listOf(
-                    Grade("Matemáticas", 5.8),
-                    Grade("Lenguaje", 6.3),
-                    Grade("Historia", 5.5),
-                    Grade("Ciencias", 6.0)
+                    name = dto.nombre,
+                    email = dto.email,
+                    password = "", // nunca devolver contraseña
+                    rut = dto.rut,
+                    phone = dto.phone,
+                    photoUrl = null,
+                    biography = null
                 )
 
                 _uiState.value = ProfileUiState(
                     student = student,
-                    grades = grades,
+                    grades = dto.grades,
                     isLoading = false
                 )
-            } else {
-                _uiState.value = ProfileUiState(isLoading = false)
+            } catch (e: Exception) {
+                _uiState.value = ProfileUiState(
+                    isLoading = false,
+                    error = "Error al cargar perfil: ${e.message}"
+                )
             }
         }
     }
 
-    fun logout() {
-        viewModelScope.launch {
-            DataStoreManager.clearUsers(context) // Limpiar datos de usuario
-        }
+    fun refreshProfile() {
+        loadProfile()
     }
 
-    private fun DataStoreManager.clearUsers(context: Context) {}
+    fun logout() {
+        // Limpieza de sesión si es necesario
+    }
 }

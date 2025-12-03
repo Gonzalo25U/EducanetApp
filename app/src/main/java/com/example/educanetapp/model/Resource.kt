@@ -1,8 +1,6 @@
 package com.example.educanetapp.model
-enum class ResourceType { LIBRO, ARTICULO, VIDEO }
-
 data class Resource(
-    val id: Int,
+    val id: Long,
     val title: String,
     val description: String,
     val type: ResourceType,

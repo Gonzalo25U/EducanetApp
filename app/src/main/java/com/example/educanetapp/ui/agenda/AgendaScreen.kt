@@ -15,20 +15,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.educanetapp.viewmodel.AgendaViewModel
+import com.example.educanetapp.viewmodel.AgendaViewModelFactory
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AgendaScreen(navController: NavController, viewModel: AgendaViewModel = viewModel()) {
+fun AgendaScreen(navController: NavController) {
+    val context = LocalContext.current
+    val viewModel: AgendaViewModel = viewModel(
+        factory = AgendaViewModelFactory(context)
+    )
+
     val selectedDateStr by viewModel.selectedDate.collectAsState()
     val remindersMap by viewModel.reminders.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
     var newNote by remember { mutableStateOf("") }
 
     val notesForDate by remember(selectedDateStr, remindersMap) {

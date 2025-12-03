@@ -3,5 +3,6 @@ package com.example.educanetapp.model
 
 data class Grade(
     val subject: String,
-    val score: Double
+    val score: Double,
+    val studentId: Long? = null
 )

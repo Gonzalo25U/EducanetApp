@@ -3,9 +3,10 @@ package com.example.educanetapp.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.educanetapp.model.Student
+import com.example.educanetapp.dto.LoginRequest
 import com.example.educanetapp.model.AuthUiState
-import com.example.educanetapp.utils.DataStoreManager
+import com.example.educanetapp.network.RetrofitInstance
+import com.example.educanetapp.utils.TokenManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -15,55 +16,46 @@ class AuthViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState
 
-
-
-    fun loadUsers(context: Context) {
-        viewModelScope.launch {
-            val users = DataStoreManager.loadUsers(context)
-            _uiState.value = _uiState.value.copy(students = users)
-        }
-    }
-
-    fun register(context: Context, student: Student) {
-        viewModelScope.launch {
-            // Convertimos Student a Map<String, String>
-            val studentMap = mapOf(
-                "name" to student.name,
-                "email" to student.email,
-                "password" to student.password,
-                "rut" to student.rut,
-                "phone" to student.phone
-            )
-
-            val updated = _uiState.value.students + studentMap
-            DataStoreManager.saveUsers(context, updated)
-
-            _uiState.value = _uiState.value.copy(
-                students = updated,
-                success = true,
-                error = null
-            )
-        }
-    }
-
+    /**
+     * Inicia sesión usando el backend remoto.
+     * Guarda el token en DataStore si el login es exitoso.
+     */
     fun login(context: Context, email: String, password: String) {
         viewModelScope.launch {
-            val users = DataStoreManager.loadUsers(context)
-            val user = users.find { it["email"] == email && it["password"] == password }
+            try {
+                // Usar RetrofitInstance con contexto para obtener LoginApi
+                val loginApi = RetrofitInstance.getLoginApi(context)
+                val response = loginApi.login(LoginRequest(email, password))
 
-            if (user != null) {
+                // Verificar si se obtuvo token
+                if (!response.token.isNullOrEmpty()) {
+                    // Guardar token en DataStore
+                    TokenManager.saveToken(context, response.token)
+
+                    // Actualizar UIState con usuario logueado
+                    _uiState.value = _uiState.value.copy(
+                        loggedInUser = mapOf("email" to email),
+                        error = null
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        loggedInUser = null,
+                        error = "Correo o contraseña incorrectos"
+                    )
+                }
+
+            } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    loggedInUser = user,
-                    error = null
-                )
-            } else {
-                _uiState.value = _uiState.value.copy(
-                    error = "Correo o contraseña incorrectos"
+                    loggedInUser = null,
+                    error = "Error al iniciar sesión: ${e.message}"
                 )
             }
         }
     }
 
+    /**
+     * Limpiar errores en la UI
+     */
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }

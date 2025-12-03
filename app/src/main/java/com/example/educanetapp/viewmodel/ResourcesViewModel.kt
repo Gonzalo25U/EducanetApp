@@ -1,42 +1,63 @@
 package com.example.educanetapp.viewmodel
+
+import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.educanetapp.model.Resource
 import com.example.educanetapp.model.ResourceType
+import com.example.educanetapp.network.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-class ResourceViewModel : ViewModel() {
+class ResourceViewModel(private val context: Context) : ViewModel() {
+
+    private val resourceApi = RetrofitInstance.getResourceApi(context)
 
     private val _resources = MutableStateFlow<List<Resource>>(emptyList())
-    val resources: StateFlow<List<Resource>> = _resources
+    val resources: StateFlow<List<Resource>> get() = _resources
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> get() = _error
 
     init {
         loadResources()
     }
 
-    private fun loadResources() {
-        _resources.value = listOf(
-            Resource(
-                1,
-                "Matemáticas 1° Medio",
-                "Libro digital de matemáticas básico.",
-                ResourceType.LIBRO,
-                "https://www.curriculumnacional.cl/portal/Educacion-General/Matematica/Matematica-1-medio/145564:Matematica-1-Medio-Santillana-Texto-del-estudiante"
-            ),
-            Resource(
-                2,
-                "Cómo mejorar tus hábitos de estudio",
-                "Artículo educativo con consejos prácticos.",
-                ResourceType.ARTICULO,
-                "https://ciencialatina.org/index.php/cienciala/article/view/16996"
-            ),
-            Resource(
-                3,
-                "Ciencias Naturales: el agua y su ciclo",
-                "Video explicativo sobre el ciclo del agua.",
-                ResourceType.VIDEO,
-                "https://youtu.be/KbLw6cB52vQ?si=LX9-8Kqe6Vo_pz6-"
-            )
-        )
+    fun loadResources() {
+        Log.d("RESOURCES", "Cargando recursos...")
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            try {
+                val data = resourceApi.getAllResources()
+                Log.d("RESOURCES", "Respuesta: $data")
+                _resources.value = data
+            } catch (e: Exception) {
+                Log.e("RESOURCES_ERROR", "Error: ${e.message}")
+                _error.value = "Error cargando recursos: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun loadResourcesByType(type: ResourceType) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            try {
+                val response = resourceApi.getResourcesByType(type.name)
+                _resources.value = response
+            } catch (e: Exception) {
+                _error.value = "Error filtrando recursos: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
     }
 }
