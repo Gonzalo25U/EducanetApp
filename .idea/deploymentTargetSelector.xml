@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-11-29T23:42:25.985220Z">
+        <DropdownSelection timestamp="2025-12-03T22:39:28.026778500Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\gonza\.android\avd\Pixel_7.avd" />
@@ -22,6 +22,9 @@
         </DialogSelection>
       </SelectionState>
       <SelectionState runConfigName="StringUtilsJUnitTest">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="Tests in 'com.example.educanetapp'">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

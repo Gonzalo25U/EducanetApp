@@ -84,8 +84,8 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "¡Bienvenido!",
-                style = MaterialTheme.typography.headlineLarge,
+                text = "¡Bienvenido a Educanet!",
+                style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )

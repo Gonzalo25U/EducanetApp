@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("org.jetbrains.kotlin.kapt")
 }
-
 android {
     namespace = "com.example.educanetapp"
     compileSdk = 36
@@ -17,7 +16,6 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -27,24 +25,19 @@ android {
             )
         }
     }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
     kotlinOptions {
         jvmTarget = "11"
     }
-
     buildFeatures {
         compose = true
     }
-
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
     }
-
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
@@ -99,7 +92,6 @@ dependencies {
     // ==================== TESTING ====================
     // JUnit 4 (compatibilidad)
     testImplementation("junit:junit:4.13.2")
-
     // JUnit 5 (moderno)
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")

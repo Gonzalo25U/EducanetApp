@@ -77,6 +77,7 @@ fun ProfileScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
                     navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
+
             )
         }
     ) { padding ->
@@ -241,6 +242,13 @@ fun ProfileScreen(
                                 icon = Icons.Default.Settings,
                                 containerColor = MaterialTheme.colorScheme.tertiary,
                                 onClick = { navController.navigate("settings/${student.email}") }
+                            )
+
+                            ActionButton(
+                                text = "Clases Virtuales",
+                                icon = Icons.Default.VideoCall,
+                                containerColor = MaterialTheme.colorScheme.onSurface,
+                                onClick = { navController.navigate("clasesVirtuales") }
                             )
 
                             ActionButton(
